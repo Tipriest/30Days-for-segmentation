@@ -1,0 +1,3 @@
+[submodule "classical_solution/fcn"]
+	path = classical_solution/fcn
+	url = git@github.com:Tipriest/pytorch-fcn.git
