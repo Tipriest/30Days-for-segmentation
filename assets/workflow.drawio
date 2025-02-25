@@ -1,0 +1,34 @@
+<mxfile host="65bd71144e">
+    <diagram id="ViOI_AU_hL_N6fjVjX0K" name="Page-1">
+        <mxGraphModel dx="641" dy="470" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="原始视频" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="360" y="280" width="80" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="视频帧" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="360" y="350" width="80" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="视频关键帧" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="360" y="420" width="80" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="图像级&lt;span style=&quot;background-color: transparent;&quot;&gt;标注&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="360" y="490" width="80" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="视频标注" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="470" y="490" width="80" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="视频标注" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="470" y="420" width="80" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" value="视频标注" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="470" y="350" width="80" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="视频标注" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="470" y="280" width="80" height="40" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

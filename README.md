@@ -1,5 +1,10 @@
 # 30 Days Plan for semantic segmentation
 
+## 0. Questions
+- 弱监督语义分割到底怎么用于场景分割，比如自然场景?
+- 现在的这个代码在猫啊狗啊的数据集上试一下
+- 生成其他种类的弱监督标签试一下
+
 ## 1. How to start
 
 ```bash

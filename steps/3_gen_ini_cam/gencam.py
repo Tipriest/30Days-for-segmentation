@@ -3,6 +3,8 @@ import pandas as pd
 from PIL import Image
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.metrics import precision_score, recall_score, f1_score
+
 import numpy as np
 
 
@@ -14,15 +16,14 @@ from torchvision import transforms
 
 from torchcam.methods import SmoothGradCAMpp
 from torchcam.utils import overlay_mask
-from sklearn.metrics import precision_score, recall_score, f1_score
 import wandb
 
 # 自定义数据集类
 class MultiLabelDataset(Dataset):
-    def __init__(self, df, transform=None):
-        self.df = df
+    def __init__(self, _df, _classes, transform=None):
+        self.df = _df
         self.transform = transform
-        self.mlb = MultiLabelBinarizer(classes=classes)
+        self.mlb = MultiLabelBinarizer(classes=_classes)
 
     def __len__(self):
         return len(self.df)
@@ -34,24 +35,24 @@ class MultiLabelDataset(Dataset):
             self.df.iloc[idx]["filename"],
         )
 
-        labels = self.df.iloc[idx]["labels"].split(",")
+        _labels = self.df.iloc[idx]["labels"].split(",")
         image = Image.open(img_path).convert("RGB")
 
         if self.transform:
             image = self.transform(image)
 
-        label_vec = torch.FloatTensor(self.mlb.fit_transform([labels])[0])
+        label_vec = torch.FloatTensor(self.mlb.fit_transform([_labels])[0])
         return image, label_vec
 
 
 # CAM生成函数（支持多标签选择）
-def generate_cam(image_path, target_classes=None):
+def generate_cam(image_path, _preprocess, _target_classes=None):
     file_path = os.path.join(
         os.getcwd(), "steps/1_preprocess/key_frames", image_path
     )
     # 预处理
     image = Image.open(file_path).convert("RGB")
-    input_tensor = preprocess(image).unsqueeze(0).to(device)
+    input_tensor = _preprocess(image).unsqueeze(0).to(device)
 
     # 创建CAM提取器（必须在forward之前）
     cam_extractor = SmoothGradCAMpp(model, target_layer="layer4")
@@ -68,13 +69,13 @@ def generate_cam(image_path, target_classes=None):
     predictions = {classes[i]: float(probs[i]) for i in range(len(classes))}
 
     # 确定目标类别（如果没有指定则选择置信度最高的三个）
-    if not target_classes:
+    if not _target_classes:
         sorted_indices = np.argsort(probs)[::-1][:3]
-        target_classes = [classes[i] for i in sorted_indices]
+        _target_classes = [classes[i] for i in sorted_indices]
 
     # 为每个目标类别生成CAM
     activations = []
-    for class_name in target_classes:
+    for class_name in _target_classes:
         class_idx = classes.index(class_name)
         # 获取对应类别的激活图
         activation = cam_extractor(class_idx, output)
@@ -111,7 +112,7 @@ def generate_cam(image_path, target_classes=None):
         ax[2].axis("off")
 
         plt.suptitle(
-            f"Predictions: {predictions}\nTarget Classes: {target_classes}"
+            f"Predictions: {predictions}\nTarget Classes: {_target_classes}"
         )
         plt.tight_layout()
         plt.show()
@@ -153,7 +154,7 @@ if __name__ == "__main__":
     )
 
     # 创建数据集和数据加载器
-    dataset = MultiLabelDataset(df, transform=preprocess)
+    dataset = MultiLabelDataset(df, _classes=classes, transform=preprocess)
     dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
 
     # 修改模型为多标签分类
@@ -235,5 +236,5 @@ if __name__ == "__main__":
             parts = [part.strip().replace('"', "") for part in line.split(",")]
             pic_name = parts[0]
             target_classes = parts[1:]
-            generate_cam(pic_name, target_classes)
+            generate_cam(pic_name, preprocess, target_classes)
     # generate_cam("000043.jpg", target_classes=["cement road", "red brick road"])
