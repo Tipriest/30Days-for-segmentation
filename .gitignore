@@ -1,0 +1,9 @@
+steps/0_material
+steps/1_preprocess/frames
+steps/1_preprocess/key_frames
+steps/2_openword_annotation/*.csv
+steps/3_gen_ini_cam/results
+*.pyc
+
+checks.json
+
