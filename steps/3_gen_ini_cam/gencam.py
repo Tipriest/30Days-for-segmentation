@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import MultiLabelBinarizer
 import numpy as np
 
+
 import torch
 from torch.utils.data import Dataset, DataLoader
 
@@ -13,23 +14,8 @@ from torchvision import transforms
 
 from torchcam.methods import SmoothGradCAMpp
 from torchcam.utils import overlay_mask
-
-
-# 设备配置
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# 读取CSV文件并构建类别编码器
-df = pd.read_csv(
-    "./steps/2_openword_annotation/labels_groundtruth.csv",
-    sep=",",
-    header=None,
-    names=["filename", "labels"],
-)
-all_labels = [labels.split(",") for labels in df["labels"]]
-mlb = MultiLabelBinarizer()
-encoded_labels = mlb.fit_transform(all_labels)
-classes = mlb.classes_.tolist()  # 获取完整类别列表
-
+from sklearn.metrics import precision_score, recall_score, f1_score
+import wandb
 
 # 自定义数据集类
 class MultiLabelDataset(Dataset):
@@ -56,44 +42,6 @@ class MultiLabelDataset(Dataset):
 
         label_vec = torch.FloatTensor(self.mlb.fit_transform([labels])[0])
         return image, label_vec
-
-
-# 数据预处理
-preprocess = transforms.Compose(
-    [
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-        ),
-    ]
-)
-
-# 创建数据集和数据加载器
-dataset = MultiLabelDataset(df, transform=preprocess)
-dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
-
-# 修改模型为多标签分类
-model = torchvision.models.resnet101(weights="IMAGENET1K_V2")
-model.fc = torch.nn.Linear(2048, len(classes))
-model = model.to(device)
-
-# 训练时使用BCEWithLogitsLoss
-optimizer = torch.optim.Adam(model.fc.parameters(), lr=1e-3)
-criterion = torch.nn.BCEWithLogitsLoss()
-
-for epoch in range(10):
-    for imgs, labels in dataloader:
-        imgs = imgs.to(device)
-        labels = labels.to(device)
-
-        outputs = model(imgs)
-        loss = criterion(outputs, labels)
-
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
 
 
 # CAM生成函数（支持多标签选择）
@@ -174,11 +122,118 @@ def generate_cam(image_path, target_classes=None):
     # 必须清理hook
     cam_extractor.remove_hooks()
 
+if __name__ == "__main__":
+    wandb.init(project="pseudo", entity="tipriest-hit")
 
-with open("./steps/2_openword_annotation/labels_groundtruth.csv", "r") as f:
-    for line in f:
-        parts = [part.strip().replace('"', "") for part in line.split(",")]
-        pic_name = parts[0]
-        target_classes = parts[1:]
-        generate_cam(pic_name, target_classes)
-# generate_cam("000043.jpg", target_classes=["cement road", "red brick road"])
+    # 设备配置
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # 读取CSV文件并构建类别编码器
+    df = pd.read_csv(
+        "./steps/2_openword_annotation/labels_groundtruth.csv",
+        sep=",",
+        header=None,
+        names=["filename", "labels"],
+    )
+    all_labels = [labels.split(",") for labels in df["labels"]]
+    mlb = MultiLabelBinarizer()
+    encoded_labels = mlb.fit_transform(all_labels)
+    classes = mlb.classes_.tolist()  # 获取完整类别列表
+
+    # 数据预处理
+    preprocess = transforms.Compose(
+        [
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+            ),
+        ]
+    )
+
+    # 创建数据集和数据加载器
+    dataset = MultiLabelDataset(df, transform=preprocess)
+    dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
+
+    # 修改模型为多标签分类
+    model = torchvision.models.resnet101(weights="IMAGENET1K_V2")
+    model.fc = torch.nn.Linear(2048, len(classes))
+    model = model.to(device)
+
+    # 训练时使用BCEWithLogitsLoss
+    optimizer = torch.optim.Adam(model.fc.parameters(), lr=1e-3)
+    criterion = torch.nn.BCEWithLogitsLoss()
+
+    wandb.watch(model, criterion, log="all")
+
+    for epoch in range(100):
+        model.train()
+        total_loss = 0.0
+        total_correct = 0
+        total_samples = 0
+        all_preds = []
+        all_labels = []
+
+        for batch_idx, (inputs, labels) in enumerate(dataloader):
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+
+            # 前向传播
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+
+            # 反向传播和优化
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            # 计算预测结果
+            probs = torch.sigmoid(outputs)
+            preds = (probs > 0.5).float()
+
+            # 收集指标数据
+            all_preds.append(preds.cpu().detach())
+            all_labels.append(labels.cpu().detach())
+
+            # 计算批次准确率(汉明准确率)
+            batch_correct = (preds == labels).sum().item()
+            total_correct += batch_correct
+            total_samples += (
+                labels.numel()
+            )  # 总标签数 = batch_size * num_classes
+
+            # 累计损失
+            total_loss += loss.item() * inputs.size(0)
+
+        # 计算epoch指标
+        epoch_loss = total_loss / total_samples
+        epoch_accuracy = total_correct / total_samples
+
+        # 合并所有预测和标签
+        all_preds = torch.cat(all_preds).numpy()
+        all_labels = torch.cat(all_labels).numpy()
+
+        # 计算更复杂的指标（确保数据在CPU上）
+        epoch_precision = precision_score(all_labels, all_preds, average="micro")
+        epoch_recall = recall_score(all_labels, all_preds, average="micro")
+        epoch_f1 = f1_score(all_labels, all_preds, average="micro")
+
+        # 记录到wandb
+        wandb.log(
+            {
+                "train_loss": epoch_loss,
+                "train_accuracy": epoch_accuracy,
+                "train_precision": epoch_precision,
+                "train_recall": epoch_recall,
+                "train_f1": epoch_f1,
+            }
+        )
+
+    with open("./steps/2_openword_annotation/labels_groundtruth.csv", "r") as f:
+        for line in f:
+            parts = [part.strip().replace('"', "") for part in line.split(",")]
+            pic_name = parts[0]
+            target_classes = parts[1:]
+            generate_cam(pic_name, target_classes)
+    # generate_cam("000043.jpg", target_classes=["cement road", "red brick road"])
