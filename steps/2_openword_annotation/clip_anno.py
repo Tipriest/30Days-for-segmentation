@@ -17,16 +17,17 @@ classes = [
     "red brick road",
     "yellow brick road",
     "soil",
-    "grass",
+    "lawn",
     "water",
-    "curd",
+    "curb",
     "others",
 ]
 text_inputs = clip.tokenize(classes).to(device)
 
-print(os.getcwd())
 # 创建CSV文件保存标签
-CSV_FILE_PATH = os.path.join(os.getcwd(), "./steps/2_openword_annotation/labels.csv")
+CSV_FILE_PATH = os.path.join(
+    os.getcwd(), "./steps/2_openword_annotation/labels.csv"
+)
 KEY_FRAMES_PATH = os.path.join(os.getcwd(), "./steps/1_preprocess/key_frames")
 with open(CSV_FILE_PATH, "w", newline="") as csvfile:
     writer = csv.writer(csvfile)

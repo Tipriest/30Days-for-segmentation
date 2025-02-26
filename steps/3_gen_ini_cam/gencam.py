@@ -18,6 +18,7 @@ from torchcam.methods import SmoothGradCAMpp
 from torchcam.utils import overlay_mask
 import wandb
 
+
 # 自定义数据集类
 class MultiLabelDataset(Dataset):
     def __init__(self, _df, _classes, transform=None):
@@ -46,7 +47,9 @@ class MultiLabelDataset(Dataset):
 
 
 # CAM生成函数（支持多标签选择）
-def generate_cam(image_path, _preprocess, _model, _device, _target_classes=None):
+def generate_cam(
+    image_path, _preprocess, _model, _device, _target_classes=None
+):
     file_path = os.path.join(
         os.getcwd(), "steps/1_preprocess/key_frames", image_path
     )
@@ -122,6 +125,7 @@ def generate_cam(image_path, _preprocess, _model, _device, _target_classes=None)
 
     # 必须清理hook
     cam_extractor.remove_hooks()
+
 
 if __name__ == "__main__":
     wandb.init(project="pseudo", entity="tipriest-hit")
@@ -216,7 +220,9 @@ if __name__ == "__main__":
         all_labels = torch.cat(all_labels).numpy()
 
         # 计算更复杂的指标（确保数据在CPU上）
-        epoch_precision = precision_score(all_labels, all_preds, average="micro")
+        epoch_precision = precision_score(
+            all_labels, all_preds, average="micro"
+        )
         epoch_recall = recall_score(all_labels, all_preds, average="micro")
         epoch_f1 = f1_score(all_labels, all_preds, average="micro")
 
