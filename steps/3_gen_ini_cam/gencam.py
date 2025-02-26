@@ -46,23 +46,23 @@ class MultiLabelDataset(Dataset):
 
 
 # CAM生成函数（支持多标签选择）
-def generate_cam(image_path, _preprocess, _target_classes=None):
+def generate_cam(image_path, _preprocess, _model, _device, _target_classes=None):
     file_path = os.path.join(
         os.getcwd(), "steps/1_preprocess/key_frames", image_path
     )
     # 预处理
     image = Image.open(file_path).convert("RGB")
-    input_tensor = _preprocess(image).unsqueeze(0).to(device)
+    input_tensor = _preprocess(image).unsqueeze(0).to(_device)
 
     # 创建CAM提取器（必须在forward之前）
-    cam_extractor = SmoothGradCAMpp(model, target_layer="layer4")
+    cam_extractor = SmoothGradCAMpp(_model, target_layer="layer4")
 
     # 模型推理
-    model.eval()
+    _model.eval()
     with torch.set_grad_enabled(True):  # 修改这里
         # 需要梯度信息
         input_tensor.requires_grad_(True)
-        output = model(input_tensor)
+        output = _model(input_tensor)
 
     # 获取预测结果
     probs = torch.sigmoid(output).squeeze().cpu().detach().numpy()
@@ -91,7 +91,7 @@ def generate_cam(image_path, _preprocess, _target_classes=None):
 
     if use_visualize:
         # 可视化
-        fig, ax = plt.subplots(1, 3, figsize=(18, 6))
+        _, ax = plt.subplots(1, 3, figsize=(18, 6))
 
         # 原始图像
         ax[0].imshow(image)
@@ -236,5 +236,5 @@ if __name__ == "__main__":
             parts = [part.strip().replace('"', "") for part in line.split(",")]
             pic_name = parts[0]
             target_classes = parts[1:]
-            generate_cam(pic_name, preprocess, target_classes)
+            generate_cam(pic_name, preprocess, model, device, target_classes)
     # generate_cam("000043.jpg", target_classes=["cement road", "red brick road"])

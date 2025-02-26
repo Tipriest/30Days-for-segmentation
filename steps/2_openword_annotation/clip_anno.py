@@ -12,19 +12,28 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 model, preprocess = clip.load("ViT-L/14@336px", device=device)
 
 # 定义候选类别
-classes = ["cement road", "red brick road", "yellow brick road", "soil", "grass", "water", "others"]
+classes = [
+    "cement road",
+    "red brick road",
+    "yellow brick road",
+    "soil",
+    "grass",
+    "water",
+    "curd",
+    "others",
+]
 text_inputs = clip.tokenize(classes).to(device)
 
-
+print(os.getcwd())
 # 创建CSV文件保存标签
-with open("./steps/2_annotation/labels.csv", "w", newline="") as csvfile:
+CSV_FILE_PATH = os.path.join(os.getcwd(), "./steps/2_openword_annotation/labels.csv")
+KEY_FRAMES_PATH = os.path.join(os.getcwd(), "./steps/1_preprocess/key_frames")
+with open(CSV_FILE_PATH, "w", newline="") as csvfile:
     writer = csv.writer(csvfile)
     writer.writerow(["Frame", "Labels"])  # 表头
 
-    for frame_path in os.listdir("./steps/1_preprocess/key_frames"):
-        file_path = os.path.join(
-            os.getcwd(), "./steps/1_preprocess/key_frames", frame_path
-        )
+    for frame_path in os.listdir(KEY_FRAMES_PATH):
+        file_path = os.path.join(KEY_FRAMES_PATH, frame_path)
         image = preprocess(Image.open(file_path)).unsqueeze(0).to(device)
         with torch.no_grad():
             logits_per_image, _ = model(image, text_inputs)
