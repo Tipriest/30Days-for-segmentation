@@ -1,8 +1,8 @@
 import os
+import csv
 import torch
 import clip
 from PIL import Image
-import csv
 
 # 设置多标签阈值（根据场景调整，例如0.2）
 threshold = 0.2
