@@ -29,7 +29,7 @@ CSV_FILE_PATH = os.path.join(
     os.getcwd(), "./steps/2_openword_annotation/labels.csv"
 )
 KEY_FRAMES_PATH = os.path.join(os.getcwd(), "./steps/1_preprocess/key_frames")
-with open(CSV_FILE_PATH, "w", newline="") as csvfile:
+with open(CSV_FILE_PATH, "w", newline="", encoding="utf-8") as csvfile:
     writer = csv.writer(csvfile)
     writer.writerow(["Frame", "Labels"])  # 表头
 

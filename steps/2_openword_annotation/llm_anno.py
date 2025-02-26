@@ -3,6 +3,9 @@
 import argparse
 import base64
 from io import BytesIO
+import csv
+import json
+from datetime import datetime
 
 from IPython.display import HTML, display
 from PIL import Image
@@ -11,8 +14,22 @@ from langchain_core.messages import HumanMessage
 from langchain_core.output_parsers import StrOutputParser
 
 
-def convert_to_base64(_pil_image):
+def save_to_csv(_results, output_path="labels_llm_pred.csv"):
+    with open(output_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Frame", "Labels"])
+        for _result in _results:
+            # writer.writerow(
+            #     [
+            #         result["image_path"],
+            #         result["annotations"],
+            #     ]
+            # )
+            # 写入CSV（例如：frame0001.jpg -> 草地,水面）
+            writer.writerow([_result["image_path"], ",".join(_result["annotations"])])
 
+
+def convert_to_base64(_pil_image):
     buffered = BytesIO()
     if _pil_image.mode == "RGBA":
         _pil_image = _pil_image.convert("RGB")
@@ -49,10 +66,15 @@ def parse_args():
     parser = argparse.ArgumentParser(description="langchain_test")
     parser.add_argument(
         "-p",
-        "--pic_path",
-        # action="store_true",
-        default="/home/tipriest/Documents/30Days-for-segmentation/steps/1_preprocess/key_frames/000111.jpg",
-        help="picture_path",
+        "--pic_paths",
+        nargs="+",
+        help="List of picture paths",
+    )
+    parser.add_argument(
+        "-d",
+        "--input_dir",
+        default="./steps/1_preprocess/key_frames",
+        help="Directory containing images",
     )
     parser.add_argument(
         "-q",
@@ -64,13 +86,21 @@ def parse_args():
         #             "lawn", "water", "curb", "others",],
         #             Determine which annotations should be given in the picture?
         #             Output the annotation result in csv format like this ["red brick road", "curb", ...]
+        #             Caution don't output other things, just the annotation result, thanks
         #         """,
-        # default="你是一个地形分类数据集的专业标注员, 判断一下图片中应该给那些标注? 以csv格式输出标注结果。",
-        default="""
-                You are a professional annotator for terrain classification data sets.
-                describe the terrain occured in this picture, and summary the terrain in  
-                csv format like this ["red brick road", "curb", ...]
+        default="""You are a professional annotator for terrain classification data sets.
+                    Here is a list of annotations:
+                    ["cement road", "red brick road", "yellow brick road", "soil",
+                    "lawn", "water", "curb", "others",],
+                    Determine which annotations should be given in the picture?
+                    Use Json format like this {"annotations": ["soil"]} to return the result data.
                 """,
+        # default="你是一个地形分类数据集的专业标注员, 判断一下图片中应该给那些标注? 以csv格式输出标注结果。",
+        # default="""
+        #         You are a professional annotator for terrain classification data sets.
+        #         describe the terrain occured in this picture, and summary the terrain in
+        #         csv format like this ["red brick road", "curb", ...]
+        #         """,
         help="questions",
     )
     return parser.parse_args()
@@ -78,20 +108,67 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    file_path = args.pic_path
-    pil_image = Image.open(file_path)
+    results = []
+
+    # 获取图片链接列表
+    image_paths = []
+    if args.input_dir:
+        import os
+        from glob import glob
+
+        image_extensions = ["jpg", "jpeg", "png", "bmp"]
+        for ext in image_extensions:
+            image_paths.extend(glob(os.path.join(args.input_dir, f"*.{ext}")))
+    elif args.pic_paths:
+        image_paths = args.pic_paths
+
+    # 定义模型
     llm = ChatOllama(
         model="llava",
         # model="deepseek-r1:14b",
-        temperature=0.5,
+        temperature=0.2,
+        format="json",
     )
-    image_b64 = convert_to_base64(pil_image)
-    plt_img_base64(image_b64)
+
     chain = prompt_func | llm | StrOutputParser()
-    query_chain = chain.invoke(
-        {
-            "text": args.question,
-            "image": image_b64,
-        }
-    )
-    print(query_chain)
+
+    # 处理每张图片
+    # FIXME: 这里为什么指定enumerate的start是1?
+    for idx, file_path in enumerate(image_paths, 1):
+        try:
+            print(f"Processing {idx}/{len(image_paths)}: {file_path}")
+            pil_image = Image.open(file_path)
+            image_b64 = convert_to_base64(pil_image)
+
+            response = chain.invoke(
+                {
+                    "text": args.question,
+                    "image": image_b64,
+                }
+            )
+            result = json.loads(response)
+            result = result["annotations"]
+            results.append(
+                {
+                    "image_path": file_path.split("/")[-1],
+                    "annotations": result[:],
+                }
+            )
+
+        except Exception as e:
+            print(f"Error processing {file_path} : {str(e)}")
+            results.append(
+                {
+                    "image_path": file_path,
+                    "annotations": f"ERROR: {str(e)}",
+                }
+            )
+
+    if results:
+        output_filename = (
+            f"annotations_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        )
+        save_to_csv(results, output_filename)
+        print(f"Saved {len(results)} results to {output_filename}")
+    else:
+        print("No result to save")
