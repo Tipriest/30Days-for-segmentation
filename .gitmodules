@@ -1,3 +1,6 @@
 [submodule "classical_solution/fcn"]
 	path = classical_solution/fcn
 	url = git@github.com:Tipriest/pytorch-fcn.git
+[submodule "classical_solution/fc-clip"]
+	path = classical_solution/fc-clip
+	url = git@github.com:Tipriest/fc-clip.git
