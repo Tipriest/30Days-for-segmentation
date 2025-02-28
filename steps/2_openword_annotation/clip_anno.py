@@ -3,6 +3,7 @@ import csv
 import torch
 import clip
 from PIL import Image
+from runpy import run_path
 
 # 设置多标签阈值（根据场景调整，例如0.2）
 threshold = 0.2
@@ -14,8 +15,8 @@ model, preprocess = clip.load("ViT-L/14@336px", device=device)
 # 定义候选类别
 classes = [
     "cement road",
-    "red brick road",
-    "yellow brick road",
+    "red paved path",
+    "yellow paved path",
     "soil",
     "lawn",
     "water",
@@ -39,6 +40,8 @@ with open(CSV_FILE_PATH, "w", newline="", encoding="utf-8") as csvfile:
         with torch.no_grad():
             logits_per_image, _ = model(image, text_inputs)
         probs = logits_per_image.softmax(dim=1).cpu().numpy()[0]
+        
+        
 
         # 提取概率超过阈值的多个类别
         selected_classes = [
@@ -51,3 +54,5 @@ with open(CSV_FILE_PATH, "w", newline="", encoding="utf-8") as csvfile:
 
         # 写入CSV（例如：frame0001.jpg -> 草地,水面）
         writer.writerow([frame_path, ",".join(selected_classes)])
+
+        run_path("./steps/2_openword_annotation/calF1.py")

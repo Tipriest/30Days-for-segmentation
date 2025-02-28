@@ -47,7 +47,7 @@ def plt_img_base64(img_base64):
     display(HTML(image_html))
 
 
-def prompt_func(data):
+def prompt_func_vlm(data):
     text = data["text"]
     image = data["image"]
 
@@ -61,6 +61,18 @@ def prompt_func(data):
     text_part = {"type": "text", "text": text}
 
     content_parts.append(image_part)
+    content_parts.append(text_part)
+
+    return [HumanMessage(content=content_parts)]
+
+
+def prompt_func_llm(data):
+    text = data["text"]
+
+    content_parts = []
+
+    text_part = {"type": "text", "text": text}
+
     content_parts.append(text_part)
 
     return [HumanMessage(content=content_parts)]
@@ -81,8 +93,8 @@ def parse_args():
         help="Directory containing images",
     )
     parser.add_argument(
-        "-q",
-        "--question",
+        "-vq",
+        "--vlm_question",
         # action="store_true",
         # default="""You are a professional annotator for terrain classification data sets.
         #             Here is a list of annotations:
@@ -93,59 +105,28 @@ def parse_args():
         #             ["red paved path", "curb", ...]
         #             Caution don't output other things, just the annotation result, thanks
         #         """,
+        default="""Use no more than 200 words to describe the contents of this image \
+in detail from the perspective of the terrain.
+especially if there exists ["cement road", "red paved path", "yellow paved path", "soil",\
+"lawn", "water", "curb", "others",], describe the colors please. 
+""",
+        help="vlm questions",
+    )
+    parser.add_argument(
+        "-lq",
+        "--llm_question",
+        # action="store_true",
         default="""Here is a list of terrain related annotations:\
 ["cement road", "red paved path", "yellow paved path", "soil",\
 "lawn", "water", "curb", "others",],\
 Determine which annotations of this list occured in this picture?\
 You could give multi annotations in the annotation list if there exists multi kind of terrains.\
-Use Json format like this {"annotations": ["soil", "lawn", "yellow paved path", ...]} to return the result data.\
-mention don't use other annotations beyond this list.\
-mention don't split the phrases like "red paved path" for "paved path" in the annotation list.\
+Use Json format like this {"annotations": []} to return the result data.\
+mention you could give multiple annotations if there exists multiple kinds of terrains.\
+mention don't split the phrases like "red paved path" to "paved path" in the annotation list.\
 mention don't use synonyms to replace the phrases like "grass" for "lawn" in the annotation list.\
 """,
-        # default="""
-        #             As a professional topography analysis assistant,
-        #             please analyze images strictly according to the following rules:
-        #             1. Terrain category definition:
-        #             - Road category:
-        #             * cement road: grey continuous hardening road surface,
-        #               which may contain obvious seams or cracks
-        #             * red paved path: paved road with red bricks arranged regularly
-        #             * yellow paved path: paved road with bright yellow bricks and
-        #               possibly diamond-shaped arrangements
-        #             * curb: The raised strip structure at the edge of the road,
-        #               which usually forms a height difference of 5-15cm from the road surface.
-        #             - Nature:
-        #             * soil: bare soil or sand, no vegetation coverage
-        #             * lawn: A grassy region
-        #             * water: liquid water surface (including accumulated water, rivers, etc.)
-        #             * others: Special terrain that is obviously not part of the above category
-        #             2. Analysis steps:
-        #               Focus on observing ground areas and ignore non-terrain elements
-        #               such as buildings and sky, Identify the material characteristics
-        #               (color, texture, structure) in each area
-        #              For questions:
-        #             - The color characteristics of the paved path must be clearly defined
-        #             3. Output requirements:
-        #             - Use strict JSON format
-        #             - Empty results return to empty list
-        #             - No comment description
-        #             - return annotations only in the list of
-        #               ["cement road", "red paved path", "yellow paved path", "soil", "lawn",
-        #               "water", "curb", "others"], some words in this list like red paved path
-        #               shuould be considered as an entity and could not be seperated,
-        #               don't use other annotations, this is vital important.
-        #             Please return the JSON result that meets the above criteria and
-        #               follow the following example to return
-        #             {"annotations": ["soil", "lawn", "yellow paved path", ...]}
-        #             """,
-        # default="你是一个地形分类数据集的专业标注员, 判断一下图片中应该给那些标注? 以csv格式输出标注结果。",
-        # default="""
-        #         You are a professional annotator for terrain classification data sets.
-        #         describe the terrain occured in this picture, and summary the terrain in
-        #         csv format like this ["red paved path", "curb", ...]
-        #         """,
-        help="questions",
+        help="llm questions",
     )
     return parser.parse_args()
 
@@ -167,14 +148,29 @@ if __name__ == "__main__":
         image_paths = args.pic_paths
 
     # 定义模型
-    llm = ChatOllama(
+    vlm = ChatOllama(
+        model="llava:13b",
+        # model="deepseek-r1:14b",
+        temperature=0.5,
+        # format="json",
+    )
+
+    vlm_json = ChatOllama(
         model="llava:13b",
         # model="deepseek-r1:14b",
         temperature=0.5,
         format="json",
     )
 
-    chain = prompt_func | llm | StrOutputParser()
+    llm = ChatOllama(
+        # model="llava:13b",
+        model="deepseek-r1:14b",
+        temperature=0.5,
+        format="json",
+    )
+
+    chain_vlm = prompt_func_vlm | vlm | StrOutputParser()
+    chain_llm = prompt_func_llm | vlm_json | StrOutputParser()
 
     # 处理每张图片
     # 这里为什么指定enumerate的start是1?
@@ -184,13 +180,15 @@ if __name__ == "__main__":
             pil_image = Image.open(file_path)
             image_b64 = convert_to_base64(pil_image)
 
-            response = chain.invoke(
+            vlm_response = chain_vlm.invoke(
                 {
-                    "text": args.question,
+                    "text": args.vlm_question,
                     "image": image_b64,
                 }
             )
-            result = json.loads(response)
+            llm_response = chain_llm.invoke({"text": args.llm_question})
+
+            result = json.loads(llm_response)
             result = result["annotations"]
             results.append(
                 {
@@ -198,6 +196,8 @@ if __name__ == "__main__":
                     "annotations": result[:],
                 }
             )
+            print(vlm_response)
+            print(llm_response)
 
         except Exception as e:
             print(f"Error processing {file_path} : {str(e)}")

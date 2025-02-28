@@ -11,6 +11,7 @@
 - 我现在想干的这个工作其实就是Open Word Segmentation, 现在虽然做的人并不多，但是也看到有做的了，然后看到有一个人叫做fc-clip的做了60%+的准确率在cityscapes场景下，这个很重要，还是想要复现一下这个方向的工作的
 - Deepseek的那个Janus-Pro 7B VLM的描述能力好像很不错
 - 看到一个grounded-sam，这个工作可以多了解+关注
+- 给大模型生成open vocabulary anno
 
 ## 1. How to start
 
@@ -58,6 +59,6 @@ python keyframes_select.py
 
 ```bash
 pip install git+https://github.com/openai/CLIP.git
-
-
 ```
+
+![only_vlm_much_space](./assets/only_vlm.png#pic_center)
