@@ -68,12 +68,12 @@ def generate_cam(
         output = _model(input_tensor)
 
     # 获取预测结果
-    probs = torch.sigmoid(output).squeeze().cpu().detach().numpy()
-    predictions = {classes[i]: float(probs[i]) for i in range(len(classes))}
+    _probs = torch.sigmoid(output).squeeze().cpu().detach().numpy()
+    predictions = {classes[i]: float(_probs[i]) for i in range(len(classes))}
 
     # 确定目标类别（如果没有指定则选择置信度最高的三个）
     if not _target_classes:
-        sorted_indices = np.argsort(probs)[::-1][:3]
+        sorted_indices = np.argsort(_probs)[::-1][:3]
         _target_classes = [classes[i] for i in sorted_indices]
 
     # 为每个目标类别生成CAM
@@ -237,7 +237,7 @@ if __name__ == "__main__":
             }
         )
 
-    with open("./steps/2_openword_annotation/labels_groundtruth.csv", "r") as f:
+    with open("./steps/2_openword_annotation/labels_groundtruth.csv", "r", encoding="utf-8") as f:
         for line in f:
             parts = [part.strip().replace('"', "") for part in line.split(",")]
             pic_name = parts[0]

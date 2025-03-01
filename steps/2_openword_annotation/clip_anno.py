@@ -1,9 +1,10 @@
 import os
 import csv
+from runpy import run_path
 import torch
 import clip
 from PIL import Image
-from runpy import run_path
+
 
 # 设置多标签阈值（根据场景调整，例如0.2）
 threshold = 0.2

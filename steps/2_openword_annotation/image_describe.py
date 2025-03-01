@@ -1,5 +1,4 @@
 from transformers import BlipProcessor, BlipForConditionalGeneration
-import torch
 from PIL import Image
 import spacy
 
@@ -18,7 +17,6 @@ out = model.generate(**inputs, max_length=50)
 caption = processor.decode(
     out[0], skip_special_tokens=True
 )  # e.g., "a road next to a grassy field with water"
-
 
 
 nlp = spacy.load("en_core_web_sm")
