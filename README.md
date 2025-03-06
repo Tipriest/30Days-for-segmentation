@@ -81,3 +81,8 @@ llava 主要是像是有一点听不懂话一样,让他不要输出这么多，�
 
 #### 3.1.4 qwen_local: result
 
+<img src="./assets/qwen_7B_local_result.png" width="70%">
+
+#### 3.1.4 qwen_with_api: result
+
+<img src="./assets/qwen_7B_local_result.png" width="70%">

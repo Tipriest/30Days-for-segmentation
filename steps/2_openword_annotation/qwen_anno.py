@@ -11,6 +11,8 @@ from transformers import (
     AutoProcessor,
 )
 
+from config.args import parse_args
+
 
 # The default range for the number of visual tokens per image in the model is 4-16384.
 # You can set min_pixels and max_pixels according to your needs,
@@ -58,69 +60,70 @@ if __name__ == "__main__":
     processor = AutoProcessor.from_pretrained(
         "/home/tipriest/.cache/modelscope/hub/models/Qwen/Qwen2.5-VL-7B-Instruct"
     )
-    for idx, file_path in enumerate(image_paths, 1):
-        try:
-            print(f"Processing {idx}/{len(image_paths)}: {file_path}")
-            messages = [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "image", "image": f"file://{file_path}"},
-                        {"type": "text", "text": args.question},
-                    ],
-                }
-            ]
-            # Preparation for inference
-            text = processor.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True
-            )
-            image_inputs, video_inputs = process_vision_info(messages)
-            inputs = processor(
-                text=[text],
-                images=image_inputs,
-                videos=video_inputs,
-                padding=True,
-                return_tensors="pt",
-            )
-            inputs = inputs.to("cuda")
+    with utils.timer():
+        for idx, file_path in enumerate(image_paths, 1):
+            try:
+                print(f"Processing {idx}/{len(image_paths)}: {file_path}")
+                messages = [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "image", "image": f"file://{file_path}"},
+                            {"type": "text", "text": args.question},
+                        ],
+                    }
+                ]
+                # Preparation for inference
+                text = processor.apply_chat_template(
+                    messages, tokenize=False, add_generation_prompt=True
+                )
+                image_inputs, video_inputs = process_vision_info(messages)
+                inputs = processor(
+                    text=[text],
+                    images=image_inputs,
+                    videos=video_inputs,
+                    padding=True,
+                    return_tensors="pt",
+                )
+                inputs = inputs.to("cuda")
 
-            # Inference: Generation of the output
-            generated_ids = model.generate(**inputs, max_new_tokens=128)
-            generated_ids_trimmed = [
-                out_ids[len(in_ids) :]
-                for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-            ]
-            output_text = processor.batch_decode(
-                generated_ids_trimmed,
-                skip_special_tokens=True,
-                clean_up_tokenization_spaces=False,
-            )
-            print(output_text)
-            result = json.loads(output_text[0])
-            result = result["annotations"]
-            results.append(
-                {
-                    "image_path": file_path.split("/")[-1],
-                    "annotations": result[:],
-                }
-            )
+                # Inference: Generation of the output
+                generated_ids = model.generate(**inputs, max_new_tokens=128)
+                generated_ids_trimmed = [
+                    out_ids[len(in_ids) :]
+                    for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+                ]
+                output_text = processor.batch_decode(
+                    generated_ids_trimmed,
+                    skip_special_tokens=True,
+                    clean_up_tokenization_spaces=False,
+                )
+                print(output_text)
+                result = json.loads(output_text[0])
+                result = result["annotations"]
+                results.append(
+                    {
+                        "image_path": file_path.split("/")[-1],
+                        "annotations": result[:],
+                    }
+                )
 
-        except Exception as e:
-            print(f"Error processing {file_path} : {str(e)}")
-            results.append(
-                {
-                    "image_path": file_path,
-                    "annotations": f"ERROR: {str(e)}",
-                }
-            )
+            except Exception as e:
+                print(f"Error processing {file_path} : {str(e)}")
+                results.append(
+                    {
+                        "image_path": file_path,
+                        "annotations": f"ERROR: {str(e)}",
+                    }
+                )
 
-    if results:
-        output_filename = (
-            "./steps/2_openword_annotation/anno_results/labels.csv"
-        )
-        utils.save_to_csv(results, output_filename)
-        print(f"Saved {len(results)} results to {output_filename}")
-    else:
-        print("No result to save")
+        if results:
+            output_filename = (
+                "./steps/2_openword_annotation/anno_results/labels.csv"
+            )
+            utils.save_to_csv(results, output_filename)
+            print(f"Saved {len(results)} results to {output_filename}")
+        else:
+            print("No result to save")
 
     run_path("./steps/2_openword_annotation/anno_results/calF1.py")
