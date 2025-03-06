@@ -67,10 +67,17 @@ pip install git+https://github.com/openai/CLIP.git
 
 #### 3.1.1 CLIP Result
 
-<img src="./assets/only_vlm.png" width="50%"> 
+<img src="./assets/clip_local_result.png" width="70%">
 
-#### 3.1.2 llava:7B Result
+#### 3.1.2 llava:13B Result
 
-#### 3.1.3 llava:7B + deepseek:14B Result
+llava 主要是像是有一点听不懂话一样,让他不要输出这么多，他还非要输出这么多
 
-#### 3.1.4 llava:7B + deepseek:14B Result
+<img src="./assets/llava:13b_local_result.png" width="70%">
+
+#### 3.1.3 llava:13B + deepseek:14B Result
+
+
+
+#### 3.1.4 qwen_local: result
+

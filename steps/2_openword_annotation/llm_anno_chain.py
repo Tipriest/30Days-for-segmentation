@@ -1,45 +1,17 @@
 # 确定当前环境
 # import sys
-import argparse
-import base64
-from io import BytesIO
-import csv
 import json
 from runpy import run_path
 
 # from datetime import datetime
-
+import utils
 from IPython.display import HTML, display
 from PIL import Image
 from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage
 from langchain_core.output_parsers import StrOutputParser
 
-
-def save_to_csv(_results, output_path="labels_llm_pred.csv"):
-    with open(output_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(["Frame", "Labels"])
-        for _result in _results:
-            # writer.writerow(
-            #     [
-            #         result["image_path"],
-            #         result["annotations"],
-            #     ]
-            # )
-            # 写入CSV（例如：frame0001.jpg -> 草地,水面）
-            writer.writerow(
-                [_result["image_path"], ",".join(_result["annotations"])]
-            )
-
-
-def convert_to_base64(_pil_image):
-    buffered = BytesIO()
-    if _pil_image.mode == "RGBA":
-        _pil_image = _pil_image.convert("RGB")
-    _pil_image.save(buffered, format="JPEG")
-    img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
-    return img_str
+from config.args import parse_args
 
 
 def plt_img_base64(img_base64):
@@ -76,59 +48,6 @@ def prompt_func_llm(data):
     content_parts.append(text_part)
 
     return [HumanMessage(content=content_parts)]
-
-
-def parse_args():
-    parser = argparse.ArgumentParser(description="langchain_test")
-    parser.add_argument(
-        "-p",
-        "--pic_paths",
-        nargs="+",
-        help="List of picture paths",
-    )
-    parser.add_argument(
-        "-d",
-        "--input_dir",
-        default="./steps/1_preprocess/key_frames",
-        help="Directory containing images",
-    )
-    parser.add_argument(
-        "-vq",
-        "--vlm_question",
-        # action="store_true",
-        # default="""You are a professional annotator for terrain classification data sets.
-        #             Here is a list of annotations:
-        #             ["cement road", "red paved path", "yellow paved path", "soil",
-        #             "lawn", "water", "curb", "others",],
-        #             Determine which annotations should be given in the picture?
-        #             Output the annotation result in csv format like this:
-        #             ["red paved path", "curb", ...]
-        #             Caution don't output other things, just the annotation result, thanks
-        #         """,
-        default="""Use no more than 200 words to describe the contents of this image \
-in detail from the perspective of the terrain.
-especially if there exists ["cement road", "red paved path", "yellow paved path", "soil",\
-"lawn", "water", "curb", "others",], describe the colors please. 
-""",
-        help="vlm questions",
-    )
-    parser.add_argument(
-        "-lq",
-        "--llm_question",
-        # action="store_true",
-        default="""Here is a list of terrain related annotations:\
-["cement road", "red paved path", "yellow paved path", "soil",\
-"lawn", "water", "curb", "others",],\
-Determine which annotations of this list occured in this picture?\
-You could give multi annotations in the annotation list if there exists multi kind of terrains.\
-Use Json format like this {"annotations": []} to return the result data.\
-mention you could give multiple annotations if there exists multiple kinds of terrains.\
-mention don't split the phrases like "red paved path" to "paved path" in the annotation list.\
-mention don't use synonyms to replace the phrases like "grass" for "lawn" in the annotation list.\
-""",
-        help="llm questions",
-    )
-    return parser.parse_args()
 
 
 if __name__ == "__main__":
@@ -178,7 +97,7 @@ if __name__ == "__main__":
         try:
             print(f"Processing {idx}/{len(image_paths)}: {file_path}")
             pil_image = Image.open(file_path)
-            image_b64 = convert_to_base64(pil_image)
+            image_b64 = utils.convert_to_base64(pil_image)
 
             vlm_response = chain_vlm.invoke(
                 {
@@ -209,10 +128,12 @@ if __name__ == "__main__":
             )
 
     if results:
-        output_filename = "./steps/2_openword_annotation/labels.csv"
-        save_to_csv(results, output_filename)
+        output_filename = (
+            "./steps/2_openword_annotation/anno_results/labels.csv"
+        )
+        utils.save_to_csv(results, output_filename)
         print(f"Saved {len(results)} results to {output_filename}")
     else:
         print("No result to save")
 
-    run_path("./steps/2_openword_annotation/calF1.py")
+    run_path("./steps/2_openword_annotation/anno_results/calF1.py")

@@ -1,6 +1,21 @@
 import csv
+import time
+from contextlib import contextmanager
+
 # from pathlib import Path
 import os
+import base64
+from io import BytesIO
+from PIL import Image
+
+
+def convert_to_base64(_pil_image: Image):
+    _buffered = BytesIO()
+    if _pil_image.mode == "RGBA":
+        _pil_image = _pil_image.convert("RGB")
+    _pil_image.save(_buffered, format="JPEG")
+    img_str = base64.b64encode(_buffered.getvalue()).decode("utf-8")
+    return img_str
 
 
 def load_image_labels(csv_path, base_dir=""):
@@ -43,3 +58,17 @@ def save_to_csv(_results, output_path="labels_llm_pred.csv"):
             writer.writerow(
                 [_result["image_path"], ",".join(_result["annotations"])]
             )
+
+
+@contextmanager
+def timer():
+    start = time.perf_counter()
+    yield  # 在此处插入被计时代码
+    end = time.perf_counter()
+    print(f"运行时长: {end - start:.6f} 秒")
+
+
+# 使用示例
+with timer():
+    # 你的代码段
+    result = [x**2 for x in range(10000)]

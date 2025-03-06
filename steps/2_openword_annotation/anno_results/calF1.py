@@ -2,9 +2,11 @@ import pandas as pd
 
 # 读取数据（假设列名为Frame和Labels）
 true_df = pd.read_csv(
-    "./steps/2_openword_annotation/labels_groundtruth.csv"
+    "./steps/2_openword_annotation/anno_results/labels_groundtruth.csv"
 )  # 真实标签
-pred_df = pd.read_csv("./steps/2_openword_annotation/labels.csv")  # 预测标签
+pred_df = pd.read_csv(
+    "./steps/2_openword_annotation/anno_results/labels.csv"
+)  # 预测标签
 
 # 合并数据并处理标签格式
 merged = pd.merge(
