@@ -41,9 +41,10 @@ true_counts = (
 # ----------------------------------------------------------------
 
 # 初始化统计字典
-tp = {label: 0 for label in all_labels}
-fp = {label: 0 for label in all_labels}
-fn = {label: 0 for label in all_labels}
+tp = {label: 0 for label in all_labels}  # 真实有该标签，模型预测了该标签
+fp = {label: 0 for label in all_labels}  # 真实没有该标签，但模型预测了该标签
+fn = {label: 0 for label in all_labels}  # 真实有该标签，但模型未预测该标签
+# 总之，后面就是预测结果，前面就是结果预测的对不对
 
 # 逐样本统计
 for _, row in merged.iterrows():
@@ -82,12 +83,12 @@ for label in all_labels:
 metrics_df = pd.DataFrame(metrics)
 
 
-# 计算宏平均
+# 计算宏平均: 每一个类别的权重相等
 macro_p = metrics_df["Precision"].mean()
 macro_r = metrics_df["Recall"].mean()
 macro_f1 = metrics_df["F1"].mean()
 
-# 计算微平均
+# 计算微平均：每一个类别的权重不相等，由频数决定
 total_tp = sum(tp.values())
 total_fp = sum(fp.values())
 total_fn = sum(fn.values())
@@ -102,8 +103,8 @@ micro_f1 = (
 print("逐类指标：")
 print(metrics_df)
 
-print("\n宏平均：")
+print("\n宏平均 (每一个类别的权重相等):")
 print(f"Precision: {macro_p:.4f}  Recall: {macro_r:.4f}  F1: {macro_f1:.4f}")
 
-print("\n微平均：")
+print("\n微平均 (每一个类别的权重不相等，由频数决定):")
 print(f"Precision: {micro_p:.4f}  Recall: {micro_r:.4f}  F1: {micro_f1:.4f}")
