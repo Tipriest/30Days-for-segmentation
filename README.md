@@ -61,4 +61,16 @@ python keyframes_select.py
 pip install git+https://github.com/openai/CLIP.git
 ```
 
-![only_vlm_much_space](./assets/only_vlm.png#pic_center)
+## 3. Current Results
+
+### 3.1 Open Vocabulary Detection
+
+#### 3.1.1 CLIP Result
+
+<img src="./assets/only_vlm.png" width="50%"> 
+
+#### 3.1.2 llava:7B Result
+
+#### 3.1.3 llava:7B + deepseek:14B Result
+
+#### 3.1.4 llava:7B + deepseek:14B Result
