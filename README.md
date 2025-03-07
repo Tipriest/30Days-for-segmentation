@@ -11,7 +11,7 @@
 - 我现在想干的这个工作其实就是Open Word Segmentation, 现在虽然做的人并不多，但是也看到有做的了，然后看到有一个人叫做fc-clip的做了60%+的准确率在cityscapes场景下，这个很重要，还是想要复现一下这个方向的工作的
 - Deepseek的那个Janus-Pro 7B VLM的描述能力好像很不错
 - 看到一个grounded-sam，这个工作可以多了解+关注
-- 给大模型生成open vocabulary anno
+- 给大模型生成open vocabulary anno，**这个可以直接用Qwen2.5的API做视频理解**
 
 ## 1. How to start
 
@@ -60,8 +60,6 @@ pip install git+https://github.com/openai/CLIP.git
 python ./steps/2_openword_annotation/clip_anno.py
 ```
 
-
-
 ## 3. Current Results
 
 ### 3.1 Open Vocabulary Detection
@@ -78,8 +76,6 @@ llava 主要是像是有一点听不懂话一样,让他不要输出这么多，�
 
 #### 3.1.3 llava:13B + deepseek:14B Result
 
-
-
 #### 3.1.4 qwen_local:7B: result
 
 <img src="./assets/qwen_7B_local_result.png" width="70%">
@@ -91,7 +87,6 @@ llava 主要是像是有一点听不懂话一样,让他不要输出这么多，�
 #### 3.1.6 qwen_with_api:70B: result
 
 <img src="./assets/qwen_70B_api.png" width="70%">
-
 
 ## My Device Info 
 CPU: AMD® Ryzen 9 7900x 12-core processor × 24  
