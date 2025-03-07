@@ -51,15 +51,16 @@ ffmpeg -i original_video.mp4 -vf "fps=5" ../1_preprocess/frames/%06d.jpg
 
 # 提取视频关键帧
 python keyframes_select.py
-
-
 ```
 
 ### 2.3 采用CLIP进行标注
 
 ```bash
 pip install git+https://github.com/openai/CLIP.git
+python ./steps/2_openword_annotation/clip_anno.py
 ```
+
+
 
 ## 3. Current Results
 
@@ -90,3 +91,8 @@ llava 主要是像是有一点听不懂话一样,让他不要输出这么多，�
 #### 3.1.6 qwen_with_api:70B: result
 
 <img src="./assets/qwen_70B_api.png" width="70%">
+
+
+## My Device Info 
+CPU: AMD® Ryzen 9 7900x 12-core processor × 24  
+GPU: RTX4080 super

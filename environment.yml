@@ -29,6 +29,7 @@ dependencies:
 - ffmpeg
 - ffmpeg-python
 - openai
+- python-dotenv
 - pip:
   - matplotlib==3.9.2
   - --find-links https://pytorch-geometric.com/whl/torch-2.5.1+cu118.html

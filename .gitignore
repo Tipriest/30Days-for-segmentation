@@ -10,3 +10,5 @@ checks.json
 wandb
 
 *.egg-info
+
+.env

@@ -1,10 +1,12 @@
 from runpy import run_path
+import os
 import json
 import base64
 import utils
 from openai import OpenAI
 from config.args import parse_args
 from tqdm import tqdm
+from dotenv import load_dotenv
 
 
 # The default range for the number of visual tokens per image in the model is 4-16384.
@@ -21,14 +23,22 @@ def encode_image(_image_path):
         return base64.b64encode(image_file.read()).decode("utf-8")
 
 
+load_dotenv()  # 自动加载.env文件
+my_api_key = ""
+try:
+    my_api_key = os.environ["API_KEY"]
+except KeyError:
+    # 提醒更新密钥而非直接崩溃
+    utils.send_alert("API_KEY missing! Update .env file!")
+
 if __name__ == "__main__":
     args = parse_args()
+
     results = []
 
     # 获取图片链接列表
     image_paths = []
     if args.input_dir:
-        import os
         from glob import glob
 
         image_extensions = ["jpg", "jpeg", "png", "bmp"]
@@ -42,7 +52,7 @@ if __name__ == "__main__":
             try:
                 client = OpenAI(
                     base_url="https://api-inference.modelscope.cn/v1/",
-                    api_key="xxx",  # Your api key
+                    api_key=my_api_key,  # Your api key
                 )
 
                 # Function to encode the image

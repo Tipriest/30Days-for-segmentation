@@ -5,6 +5,7 @@ from contextlib import contextmanager
 # from pathlib import Path
 import os
 import base64
+import logging
 from io import BytesIO
 from PIL import Image
 
@@ -26,7 +27,7 @@ def load_image_labels(csv_path, base_dir=""):
         base_dir: 图像路径前缀（若CSV中的路径为相对路径）
     """
     image_labels = {}
-    with open(csv_path, "r") as f:
+    with open(csv_path, "r", encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
             # 处理图像路径
@@ -68,7 +69,6 @@ def timer():
     print(f"运行时长: {end - start:.6f} 秒")
 
 
-# 使用示例
-with timer():
-    # 你的代码段
-    result = [x**2 for x in range(10000)]
+def send_alert(message):
+    logging.error("ALERT: %s", message)
+    # 可扩展：同时写入文件/发送到日志服务器
