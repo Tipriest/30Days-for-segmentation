@@ -79,10 +79,14 @@ llava 主要是像是有一点听不懂话一样,让他不要输出这么多，�
 
 
 
-#### 3.1.4 qwen_local: result
+#### 3.1.4 qwen_local:7B: result
 
 <img src="./assets/qwen_7B_local_result.png" width="70%">
 
-#### 3.1.4 qwen_with_api: result
+#### 3.1.5 qwen_with_api:7B: result
 
-<img src="./assets/qwen_7B_local_result.png" width="70%">
+<img src="./assets/qwen_7B_api.png" width="70%">
+
+#### 3.1.6 qwen_with_api:70B: result
+
+<img src="./assets/qwen_70B_api.png" width="70%">
