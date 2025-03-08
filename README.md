@@ -90,4 +90,4 @@ llava 主要是像是有一点听不懂话一样,让他不要输出这么多，�
 
 ## My Device Info 
 CPU: AMD® Ryzen 9 7900x 12-core processor × 24  
-GPU: RTX4080 super
+GPU: RTX4080 super 16GB
