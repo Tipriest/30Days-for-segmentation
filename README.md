@@ -86,7 +86,7 @@ llava 主要是像是有一点听不懂话一样,让他不要输出这么多，�
 
 #### 3.1.6 qwen_with_api:70B: result
 
-<img src="./assets/qwen_70B_api.png" width="70%">
+<img src="./assets/qwen_70B_api_prompt2.png" width="70%">
 
 ## My Device Info 
 CPU: AMD® Ryzen 9 7900x 12-core processor × 24  

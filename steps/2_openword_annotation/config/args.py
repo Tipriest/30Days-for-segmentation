@@ -19,24 +19,29 @@ def parse_args():
         "-q",
         "--question",
         # action="store_true",
-        # default="""You are a professional annotator for terrain classification data sets.
-        #             Here is a list of annotations:
-        #             ["cement road", "red paved path", "yellow paved path", "soil",
-        #             "lawn", "water", "curb", "others",],
-        #             Determine which annotations should be given in the picture?
-        #             Output the annotation result in csv format like this:
-        #             ["red paved path", "curb", ...]
-        #             Caution don't output other things, just the annotation result, thanks
-        #         """,
-        default="""Here is a list of terrain related annotations:\
+        ## prompt1
+        
+#         default="""You are a professional annotator for terrain classification data sets.\
+#Here is a list of annotations:\
+#["cement road", "red paved path", "yellow paved path", "soil", \
+#"lawn", "water", "curb", "others",],\
+#Determine the annotations should be given for this picture.
+#You could give multi annotations in the annotation list if there exists multi kind of terrains.\
+#Use format like this {"annotations": ["item1", "item2", ...]} to return the result data.\
+#mention don't use other annotations beyond this list.\
+#mention don't split the phrases like "red paved path" for "paved path" in the annotation list.\
+#mention don't use synonyms to replace the phrases like "grass" for "lawn" in the annotation list.\
+# """,
+        ## prompt2
+                default="""Here is a list of terrain related annotations:\
 ["cement road", "red paved path", "yellow paved path", "soil",\
 "lawn", "water", "curb", "others",],\
 Determine which annotations of this list occured in this picture?\
 You could give multi annotations in the annotation list if there exists multi kind of terrains.\
-Use format like this {"annotations": ["item1", "item2", ...]} to return the result data.\
-mention don't use other annotations beyond this list.\
-mention don't split the phrases like "red paved path" for "paved path" in the annotation list.\
-mention don't use synonyms to replace the phrases like "grass" for "lawn" in the annotation list.\
+Use format like this {"annotations": ["item1", "item2", ...]} to return the result data. \
+mention don't use other annotations beyond this list. \
+mention don't split the phrases like "red paved path" for "paved path" in the annotation list. \
+mention don't use synonyms to replace the phrases like "grass" for "lawn" in the annotation list. \
 """,
         # default="""
         #             As a professional topography analysis assistant,
