@@ -16,24 +16,34 @@ def parse_args():
         help="Directory containing images",
     )
     parser.add_argument(
-        "-q",
-        "--question",
-        # action="store_true",
-        ## prompt1
-        
-#         default="""You are a professional annotator for terrain classification data sets.\
-#Here is a list of annotations:\
-#["cement road", "red paved path", "yellow paved path", "soil", \
-#"lawn", "water", "curb", "others",],\
-#Determine the annotations should be given for this picture.
-#You could give multi annotations in the annotation list if there exists multi kind of terrains.\
-#Use format like this {"annotations": ["item1", "item2", ...]} to return the result data.\
-#mention don't use other annotations beyond this list.\
-#mention don't split the phrases like "red paved path" for "paved path" in the annotation list.\
-#mention don't use synonyms to replace the phrases like "grass" for "lawn" in the annotation list.\
-# """,
-        ## prompt2
-                default="""Here is a list of terrain related annotations:\
+        "-d2",
+        "--input_dir2",
+        default="/data/Competitions/train",
+        help="Directory containing images",
+    )
+    parser.add_argument(
+        "-q1",
+        "--question1",
+        # prompt1
+        default="""You are a professional annotator for terrain classification data sets.\
+Here is a list of annotations:\
+["cement road", "red paved path", "yellow paved path", "soil", \
+"lawn", "water", "curb", "others",],\
+Determine the annotations should be given for this picture.
+You could give multi annotations in the annotation list if there exists multi kind of terrains.\
+Use format like this {"annotations": ["item1", "item2", ...]} to return the result data.\
+mention don't use other annotations beyond this list.\
+mention don't split the phrases like "red paved path" for "paved path" in the annotation list.\
+mention don't use synonyms to replace the phrases like "grass" for "lawn" in the annotation list.\
+""",
+        help="questions1",
+    )
+
+    parser.add_argument(
+        "-q2",
+        "--question2",
+        # prompt2
+        default="""Here is a list of terrain related annotations:\
 ["cement road", "red paved path", "yellow paved path", "soil",\
 "lawn", "water", "curb", "others",],\
 Determine which annotations of this list occured in this picture?\
@@ -86,6 +96,35 @@ mention don't use synonyms to replace the phrases like "grass" for "lawn" in the
         #         csv format like this ["red paved path", "curb", ...]
         #         """,
         help="questions",
+    )
+    parser.add_argument(
+        "-vlq",
+        "--vlm_question",
+
+        ## prompt2
+        default="""Here is a list of terrain related annotations:\
+["cement road", "red paved path", "yellow paved path", "soil",\
+"lawn", "water", "curb", "others",],\
+Try to describe what kind of terrains existed in this picture.
+""",
+        help="questions",
+    )
+
+    parser.add_argument(
+        "--llm_question",
+
+
+        default="""Here is a list of terrain related annotations:\
+["cement road", "red paved path", "yellow paved path", "soil",\
+"lawn", "water", "curb", "others",],\
+Determine which annotations of this list occured through the description?\
+You could give multi annotations in the annotation list if there exists multi kind of terrains.\
+Use format like this {"annotations": ["item1", "item2", ...]} to return the result data. \
+mention don't use other annotations beyond this list. \
+mention don't split the phrases like "red paved path" for "paved path" in the annotation list. \
+mention don't use synonyms to replace the phrases like "grass" for "lawn" in the annotation list. \
+""",
+        help="llm_question",
     )
 
     return parser.parse_args()
