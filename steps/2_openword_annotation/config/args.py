@@ -18,9 +18,10 @@ def parse_args():
     parser.add_argument(
         "-d2",
         "--input_dir2",
-        default="/data/Competitions/train",
+        default="/data/Competitions/images/train",
         help="Directory containing images",
     )
+
     parser.add_argument(
         "-q1",
         "--question1",
@@ -53,50 +54,63 @@ mention don't use other annotations beyond this list. \
 mention don't split the phrases like "red paved path" for "paved path" in the annotation list. \
 mention don't use synonyms to replace the phrases like "grass" for "lawn" in the annotation list. \
 """,
-        # default="""
-        #             As a professional topography analysis assistant,
-        #             please analyze images strictly according to the following rules:
-        #             1. Terrain category definition:
-        #             - Road category:
-        #             * cement road: grey continuous hardening road surface,
-        #               which may contain obvious seams or cracks
-        #             * red paved path: paved road with red bricks arranged regularly
-        #             * yellow paved path: paved road with bright yellow bricks and
-        #               possibly diamond-shaped arrangements
-        #             * curb: The raised strip structure at the edge of the road,
-        #               which usually forms a height difference of 5-15cm from the road surface.
-        #             - Nature:
-        #             * soil: bare soil or sand, no vegetation coverage
-        #             * lawn: A grassy region
-        #             * water: liquid water surface (including accumulated water, rivers, etc.)
-        #             * others: Special terrain that is obviously not part of the above category
-        #             2. Analysis steps:
-        #               Focus on observing ground areas and ignore non-terrain elements
-        #               such as buildings and sky, Identify the material characteristics
-        #               (color, texture, structure) in each area
-        #              For questions:
-        #             - The color characteristics of the paved path must be clearly defined
-        #             3. Output requirements:
-        #             - Use strict JSON format
-        #             - Empty results return to empty list
-        #             - No comment description
-        #             - return annotations only in the list of
-        #               ["cement road", "red paved path", "yellow paved path", "soil", "lawn",
-        #               "water", "curb", "others"], some words in this list like red paved path
-        #               shuould be considered as an entity and could not be seperated,
-        #               don't use other annotations, this is vital important.
-        #             Please return the JSON result that meets the above criteria and
-        #               follow the following example to return
-        #             {"annotations": ["soil", "lawn", "yellow paved path", ...]}
-        #             """,
+        help="questions",
+    )
+    parser.add_argument(
+        "-q3",
+        "--question3",
+        default="""
+                    As a professional topography analysis assistant,
+                    please analyze images strictly according to the following rules:
+                    1. Terrain category definition:
+                    - Road category:
+                    * cement road: grey continuous hardening road surface,
+                      which may contain obvious seams or cracks
+                    * red paved path: paved road with red bricks arranged regularly
+                    * yellow paved path: paved road with bright yellow bricks and
+                      possibly diamond-shaped arrangements
+                    * curb: The raised strip structure at the edge of the road,
+                      which usually forms a height difference of 5-15cm from the road surface.
+                    - Nature:
+                    * soil: bare soil or sand, no vegetation coverage
+                    * lawn: A grassy region
+                    * water: liquid water surface (including accumulated water, rivers, etc.)
+                    * others: Special terrain that is obviously not part of the above category
+                    2. Analysis steps:
+                      Focus on observing ground areas and ignore non-terrain elements
+                      such as buildings and sky, Identify the material characteristics
+                      (color, texture, structure) in each area
+                     For questions:
+                    - The color characteristics of the paved path must be clearly defined
+                    3. Output requirements:
+                    - Use strict JSON format
+                    - Empty results return to empty list
+                    - No comment description
+                    - return annotations only in the list of
+                      ["cement road", "red paved path", "yellow paved path", "soil", "lawn",
+                      "water", "curb", "others"], some words in this list like red paved path
+                      shuould be considered as an entity and could not be seperated,
+                      don't use other annotations, this is vital important.
+                    Please return the JSON result that meets the above criteria and
+                      follow the following example to return
+                    {"annotations": ["soil", "lawn", "yellow paved path", ...]}
+                    """,
         # default="你是一个地形分类数据集的专业标注员, 判断一下图片中应该给那些标注? 以csv格式输出标注结果。",
         # default="""
         #         You are a professional annotator for terrain classification data sets.
         #         describe the terrain occured in this picture, and summary the terrain in
         #         csv format like this ["red paved path", "curb", ...]
         #         """,
-        help="questions",
+        help="questions3",
     )
+
+    parser.add_argument(
+        "-q4",
+        "--question4",
+        default="""从消防安全的角度框出走廊中危险物品的位置，比如易燃物品和阻塞了消防安全通道的物品, 以json格式输出所有的坐标""",
+        help="questions4",
+    )
+
     parser.add_argument(
         "-vlq",
         "--vlm_question",
