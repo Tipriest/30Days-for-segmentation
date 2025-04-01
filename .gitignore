@@ -4,7 +4,7 @@ steps/1_preprocess/key_frames
 steps/2_openword_annotation/anno_results/*.csv
 steps/3_gen_ini_cam/results
 *.pyc
-
+qwen-vl-utils/
 checks.json
 
 wandb
